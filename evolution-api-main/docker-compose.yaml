@@ -11,7 +11,7 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
-      - evolution_instances:/evolution/instances
+      - evolution_instances:/sessions
     networks:
       - evolution-net
       - dokploy-network
@@ -28,6 +28,8 @@ services:
       - "3000:80"
     networks:
       - evolution-net
+    volumes:
+      - ./docker/frontend/nginx.conf:/etc/nginx/conf.d/nginx.conf:ro
 
   redis:
     container_name: evolution_redis
@@ -40,9 +42,11 @@ services:
     networks:
       evolution-net:
         aliases:
+          - evo_redis
           - evolution-redis
       dokploy-network:
         aliases:
+          - evo_redis
           - evolution-redis
     expose:
       - "6379"
@@ -66,8 +70,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - evolution-net
-      - dokploy-network
+      evolution-net:
+        aliases:
+          - postgres
+      dokploy-network:
+        aliases:
+          - postgres
     expose:
       - "5432"
 

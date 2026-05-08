@@ -7,7 +7,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - evolution_instances:/evolution/instances
+      - evolution_instances:/sessions
     networks:
       - evolution-net
     env_file:

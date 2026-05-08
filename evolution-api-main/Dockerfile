@@ -40,6 +40,8 @@ ENV DOCKER_ENV=true
 
 WORKDIR /evolution
 
+RUN mkdir -p /sessions
+
 COPY --from=builder /evolution/package.json ./package.json
 COPY --from=builder /evolution/package-lock.json ./package-lock.json
 

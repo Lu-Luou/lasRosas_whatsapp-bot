@@ -4,7 +4,7 @@ services:
   evolution_v2:
     image: evoapicloud/evolution-api:v2.3.7
     volumes:
-      - evolution_instances:/evolution/instances
+      - evolution_instances:/sessions
     networks:
       - network_public
     environment:

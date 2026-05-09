@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  bot-backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - EVOLUTION_API_URL=http://evolution-api:8080
+      - EVOLUTION_API_KEY=your_api_key_here
+      - BACKEND_PORT=8000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+    networks:
+      - las-rosas-net
+    restart: unless-stopped
+
+networks:
+  las-rosas-net:
+    driver: bridge

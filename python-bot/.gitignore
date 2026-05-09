@@ -1,0 +1,37 @@
+# .gitignore para python-bot
+
+# Ambiente virtual
+venv/
+env/
+ENV/
+
+# Archivos compilados
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Almacenamiento local
+data/
+*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

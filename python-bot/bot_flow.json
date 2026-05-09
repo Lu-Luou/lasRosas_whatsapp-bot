@@ -1,0 +1,326 @@
+{
+  "flow_id": "lasrosas_ciudadano_v1",
+  "version": "1.0",
+  "start_node": "welcome",
+  "metadata": {
+    "tenant": "municipalidad_las_rosas",
+    "locale": "es-AR",
+    "timezone": "America/Argentina/Cordoba",
+    "policy": {
+      "max_user_idle_minutes": 20,
+      "max_turns": 40,
+      "fallback_node": "fallback_general",
+      "human_handoff_node": "derivacion_humana"
+    }
+  },
+  "nodes": [
+    {
+      "id": "welcome",
+      "type": "message",
+      "text": "Hola. Soy el asistente virtual del municipio de Las Rosas. Puedo ayudarte con Reclamos, Vialidad y Tránsito, TGI o derivarte a atención humana.",
+      "trigger": {
+        "mode": "llm_intent",
+        "prompt": "Disparar este nodo cuando el usuario saluda o inicia una conversación nueva.",
+        "examples_positive": [
+          "hola",
+          "buenas",
+          "hola, necesito ayuda"
+        ],
+        "examples_negative": [
+          "quiero pagar tgi",
+          "tengo un reclamo por luminaria"
+        ],
+        "confidence_threshold": 0.7
+      },
+      "next": [
+        "menu_principal"
+      ]
+    },
+    {
+      "id": "menu_principal",
+      "type": "menu",
+      "text": "Elegí una opción enviando el número correspondiente:\n1) Reclamos\n2) Vialidad y Tránsito\n3) TGI\n4) Terminar conversación\n5) Identidad",
+      "options": [
+        {
+          "label": "1) Reclamos",
+          "next": "reclamos_intro"
+        },
+        {
+          "label": "2) Vialidad y Tránsito",
+          "next": "transito_intro"
+        },
+        {
+          "label": "3) TGI",
+          "next": "tgi_intro"
+        },
+        {
+          "label": "4) Terminar conversación",
+          "next": "cerrar_conversacion"
+        },
+        {
+          "label": "5) Identidad",
+          "next": "identidad"
+        }
+      ],
+      "guardrails": [
+        {
+          "rule": "accept_numeric_options_only",
+          "on_fail": "fallback_menu"
+        }
+      ]
+    },
+    {
+      "id": "reclamos_intro",
+      "type": "message",
+      "text": "Perfecto. Vamos a registrar tu reclamo.",
+      "next": [
+        "reclamos_form"
+      ]
+    },
+    {
+      "id": "reclamos_form",
+      "type": "form",
+      "prompt": "Contanos tu reclamo con la mayor precisión posible.",
+      "fields": [
+        {
+          "name": "nombre",
+          "type": "text",
+          "required": true,
+          "prompt": "Nombre y apellido"
+        },
+        {
+          "name": "telefono",
+          "type": "text",
+          "required": true,
+          "prompt": "Número de contacto",
+          "validation": {
+            "regex": "^[0-9+ ]{8,20}$",
+            "message": "Ingresá un teléfono válido"
+          }
+        },
+        {
+          "name": "ubicacion",
+          "type": "location",
+          "required": false,
+          "prompt": "Ubicación del reclamo (opcional)"
+        },
+        {
+          "name": "detalle",
+          "type": "textarea",
+          "required": true,
+          "prompt": "Detalle del reclamo"
+        },
+        {
+          "name": "evidencia",
+          "type": "attachment",
+          "required": false,
+          "prompt": "Podés adjuntar foto o documento (opcional)"
+        }
+      ],
+      "on_submit": {
+        "action": "create_ticket",
+        "next": "reclamos_confirmacion"
+      }
+    },
+    {
+      "id": "reclamos_confirmacion",
+      "type": "message",
+      "text": "Tu reclamo fue registrado correctamente. En breve recibís novedades.",
+      "next": [
+        "menu_post_gestion"
+      ]
+    },
+    {
+      "id": "transito_intro",
+      "type": "menu",
+      "text": "Seleccioná la consulta de Vialidad y Tránsito:\n1) Estado de calle\n2) Señalización\n3) Infracciones\n4) Volver",
+      "options": [
+        {
+          "label": "1) Estado de calle",
+          "next": "transito_estado_calle"
+        },
+        {
+          "label": "2) Señalización",
+          "next": "transito_senalizacion"
+        },
+        {
+          "label": "3) Infracciones",
+          "next": "transito_infracciones"
+        },
+        {
+          "label": "4) Volver",
+          "next": "menu_principal"
+        }
+      ]
+    },
+    {
+      "id": "transito_estado_calle",
+      "type": "message",
+      "text": "Para estado de calle, indicá barrio y calle principal. Si querés, adjuntá foto.",
+      "next": [
+        "menu_post_gestion"
+      ]
+    },
+    {
+      "id": "transito_senalizacion",
+      "type": "message",
+      "text": "Registramos tu consulta de señalización. Un equipo la revisará.",
+      "next": [
+        "menu_post_gestion"
+      ]
+    },
+    {
+      "id": "transito_infracciones",
+      "type": "form",
+      "prompt": "Para consultar infracciones, completá estos datos:",
+      "fields": [
+        {
+          "name": "dominio",
+          "type": "text",
+          "required": true,
+          "prompt": "Patente"
+        },
+        {
+          "name": "dni",
+          "type": "text",
+          "required": false,
+          "prompt": "DNI (opcional)"
+        }
+      ],
+      "on_submit": {
+        "action": "query_fines",
+        "next": "menu_post_gestion"
+      }
+    },
+    {
+      "id": "tgi_intro",
+      "type": "menu",
+      "text": "TGI: elegí una opción:\n1) Consultar deuda\n2) Medios de pago\n3) Volver",
+      "options": [
+        {
+          "label": "1) Consultar deuda",
+          "next": "tgi_consulta_deuda"
+        },
+        {
+          "label": "2) Medios de pago",
+          "next": "tgi_medios_pago"
+        },
+        {
+          "label": "3) Volver",
+          "next": "menu_principal"
+        }
+      ],
+      "trigger": {
+        "mode": "llm_intent",
+        "prompt": "Detectar intención de TGI, tasas o deuda municipal.",
+        "examples_positive": [
+          "quiero pagar tgi",
+          "consultar deuda de tasas",
+          "boleta municipal"
+        ],
+        "examples_negative": [
+          "quiero hacer un reclamo",
+          "necesito hablar con una persona"
+        ],
+        "confidence_threshold": 0.75
+      }
+    },
+    {
+      "id": "tgi_consulta_deuda",
+      "type": "form",
+      "prompt": "Ingresá los datos para consultar deuda de TGI.",
+      "fields": [
+        {
+          "name": "cuenta_tgi",
+          "type": "text",
+          "required": true,
+          "prompt": "Número de cuenta"
+        },
+        {
+          "name": "dni_titular",
+          "type": "text",
+          "required": true,
+          "prompt": "DNI del titular"
+        }
+      ],
+      "on_submit": {
+        "action": "query_tgi_debt",
+        "next": "menu_post_gestion"
+      }
+    },
+    {
+      "id": "tgi_medios_pago",
+      "type": "message",
+      "text": "Podés pagar TGI por homebanking, cajas municipales o links de pago habilitados.",
+      "next": [
+        "menu_post_gestion"
+      ]
+    },
+    {
+      "id": "identidad",
+      "type": "message",
+      "text": "Soy el asistente virtual municipal. Puedo orientar consultas y registrar solicitudes. Si necesitás un agente humano, puedo derivarte.",
+      "next": [
+        "menu_post_gestion"
+      ]
+    },
+    {
+      "id": "derivacion_humana",
+      "type": "action",
+      "action": "handoff_to_human",
+      "text": "Te derivo con un agente humano. Por favor aguardá un momento.",
+      "next": [
+        "fin"
+      ]
+    },
+    {
+      "id": "cerrar_conversacion",
+      "type": "action",
+      "action": "close_conversation",
+      "text": "Gracias por comunicarte. Si necesitás algo más, escribinos nuevamente.",
+      "next": [
+        "fin"
+      ]
+    },
+    {
+      "id": "menu_post_gestion",
+      "type": "menu",
+      "text": "¿Querés hacer otra gestión?\n1) Volver al menú principal\n2) Hablar con una persona\n3) Terminar",
+      "options": [
+        {
+          "label": "1) Volver al menú principal",
+          "next": "menu_principal"
+        },
+        {
+          "label": "2) Hablar con una persona",
+          "next": "derivacion_humana"
+        },
+        {
+          "label": "3) Terminar",
+          "next": "cerrar_conversacion"
+        }
+      ]
+    },
+    {
+      "id": "fallback_menu",
+      "type": "message",
+      "text": "No entendí la opción. Por favor respondé con un número del menú.",
+      "next": [
+        "menu_principal"
+      ]
+    },
+    {
+      "id": "fallback_general",
+      "type": "message",
+      "text": "No logré interpretar tu mensaje. Si querés, escribí MENU para ver opciones disponibles.",
+      "next": [
+        "menu_principal"
+      ]
+    },
+    {
+      "id": "fin",
+      "type": "end",
+      "text": "Conversación finalizada"
+    }
+  ]
+}

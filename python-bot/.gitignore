@@ -20,7 +20,6 @@ build/
 
 # Almacenamiento local
 data/
-*.json
 
 # IDE
 .vscode/

@@ -13,6 +13,7 @@ from models import (
     ConversationState, BotResponse
 )
 from flows import get_flow_node, get_initial_flow
+from json_flow import json_flow_service, load_json_flow_or_raise
 from storage import storage
 from utils import log_message
 
@@ -27,6 +28,12 @@ async def lifespan(_app: FastAPI):
     logger.info("Backend iniciando en %s:%s", settings.backend_host, settings.backend_port)
     logger.info("Storage path: %s", settings.storage_path)
     logger.info("Attachments path: %s", settings.attachments_path)
+    try:
+        flow = load_json_flow_or_raise()
+        logger.info("JSON flow cargado: %s (%s nodos)", flow.flow_id, len(flow.nodes))
+    except RuntimeError as err:
+        # No bloquea el backend actual, pero deja registro para corregir el JSON.
+        logger.warning("No se pudo cargar bot_flow.json: %s", err)
     yield
 
 
@@ -44,7 +51,8 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "service": "Las Rosas WhatsApp Bot"
+        "service": "Las Rosas WhatsApp Bot",
+        "json_flow": json_flow_service.summary(),
     }
 
 
@@ -251,6 +259,36 @@ async def list_flows():
             for node in FLOW_NODES.values()
         ]
     }
+
+
+@app.get("/flow-json")
+async def get_json_flow():
+    """Obtiene el flujo JSON actualmente cargado."""
+    flow = json_flow_service.get()
+    if not flow:
+        raise HTTPException(
+            status_code=404,
+            detail="JSON flow not loaded. Verifica bot_flow.json y reinicia o usa /flow-json/reload",
+        )
+
+    return {
+        "status": "loaded",
+        "flow": flow.model_dump(mode="json"),
+    }
+
+
+@app.post("/flow-json/reload")
+async def reload_json_flow():
+    """Recarga bot_flow.json sin reiniciar el servidor."""
+    try:
+        flow = json_flow_service.reload()
+        return {
+            "status": "reloaded",
+            "summary": json_flow_service.summary(),
+            "flow_id": flow.flow_id,
+        }
+    except Exception as err:
+        raise HTTPException(status_code=400, detail=str(err)) from err
 
 
 if __name__ == "__main__":

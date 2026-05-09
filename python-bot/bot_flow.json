@@ -9,8 +9,7 @@
     "policy": {
       "max_user_idle_minutes": 20,
       "max_turns": 40,
-      "fallback_node": "fallback_general",
-      "human_handoff_node": "derivacion_humana"
+      "fallback_node": "fallback_general"
     }
   },
   "nodes": [
@@ -265,15 +264,6 @@
       ]
     },
     {
-      "id": "derivacion_humana",
-      "type": "action",
-      "action": "handoff_to_human",
-      "text": "Te derivo con un agente humano. Por favor aguardá un momento.",
-      "next": [
-        "fin"
-      ]
-    },
-    {
       "id": "cerrar_conversacion",
       "type": "action",
       "action": "close_conversation",
@@ -312,7 +302,7 @@
     {
       "id": "fallback_general",
       "type": "message",
-      "text": "No logré interpretar tu mensaje. Si querés, escribí MENU para ver opciones disponibles.",
+      "text": "No logré interpretar tu mensaje.",
       "next": [
         "menu_principal"
       ]
